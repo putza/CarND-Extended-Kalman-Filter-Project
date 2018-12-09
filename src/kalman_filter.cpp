@@ -1,4 +1,5 @@
 #include "kalman_filter.h"
+#include <math.h>
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -19,46 +20,42 @@ void KalmanFilter::Init(VectorXd &x_in, MatrixXd &P_in, MatrixXd &F_in,
 
 void KalmanFilter::Predict() {
   /**
-  TODO:
-    * predict the state
+  TODO: (completed)
+    * (done) predict the state
+      Following coding example in lesson 25.14
   */
 
-    x_ = F_*x_;
-    MatrixXd Ft = F_.transpose();
-    P_ = F_*P_*Ft + Q_;
+    x_ = F_*x_; // New state prediction based on motion model
+    //MatrixXd Ft = F_.transpose();
+    P_ = F_*P_*F_.transpose() + Q_; // New process covariance prediction  based on motion model
 }
 
 void KalmanFilter::Update(const VectorXd &z) {
   /**
-  TODO:
-    * update the state by using Kalman Filter equations
+  TODO: (completed)
+    * (done) update the state by using Kalman Filter equations
+      Following coding example in lesson 25.14 and 25.15
   */
 
-    VectorXd z_pred = H_ * x_;
-    VectorXd y = z - z_pred;
-    MatrixXd Ht = H_.transpose();
+    VectorXd z_pred = H_ * x_;        // Project state prediction to measurement space
+    VectorXd y = z - z_pred;          // Calculate residual to measurement
+    MatrixXd Ht = H_.transpose();     // Prepare projection from measurement space to state space
     MatrixXd S = H_ * P_ * Ht + R_;
     MatrixXd Si = S.inverse();
     MatrixXd PHt = P_ * Ht;
     MatrixXd K = PHt * Si;
 
-    x_ = x_ + (K * y);
-    long x_size = x_.size();
-    MatrixXd I = MatrixXd::Identity(x_size, x_size);
-    P_ = (I - K * H_) * P_;
+    x_ = x_ + (K * y);                // Update state with projected residual
+    long x_size = x_.size();          // Update process coavriance matrix
+    P_ = (MatrixXd::Identity(x_size, x_size) - K * H_) * P_;
 
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
   /**
-  TODO:
-    * update the state by using Extended Kalman Filter equations
+  TODO: (dompleted)
+    * (done) update the state by using Extended Kalman Filter equations
   */
-
-    // Set pi for phi adjustment
-    float pi = 3.141592;
-
-
 
     float px = x_[0];
     float py = x_[1];
@@ -68,37 +65,36 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
     float rho = sqrt(px*px + py*py);
     float phi = atan2(py, px);
     float rho_dot = (px*vx + py*vy)/rho;
-
-    // Calculate h(x_p)
-    VectorXd Hx_(3);
-    Hx_ << rho, phi, rho_dot;
-
-    // Calculate y
-    VectorXd y = z - Hx_;
-
-    // Adjust phi for y
-    
-    while (y[1] > pi) 
-    {
-        y[1] -= 2*pi;
+    // Ignore radial velocity is radius is too small
+    if (fabs(rho) < 0.0001) {
+      rho_dot = 0;
     }
 
-    while (y[1] < -pi) 
-    {
-        y[1] += 2*pi;
+    // Calculate the exatc projection from state to measurement space: z_p =  h(x_p)
+    VectorXd z_p(3);
+    z_p << rho, phi, rho_dot;
+
+    // Calculate residual y
+    VectorXd y = z - z_p;
+
+    // Adjust phi to be in [-pi,pi]
+    if (y[1] > M_PI){
+        y[1] -= 2*M_PI;
+    } else if (y[1] < -M_PI){
+        y[1] += 2*M_PI;
     }
 
-    //TODO Might be better to create a function for below
-
+    // Prepare projection matrixes from measurement space to state space
+    // Identical to the standard Kalman filter
     MatrixXd Ht = H_.transpose();
     MatrixXd S = H_*P_*Ht + R_;
     MatrixXd Si = S.inverse();
     MatrixXd PHt = P_*Ht;
     MatrixXd K = PHt*Si;
 
+    // Project measurment space to state space
     x_ = x_ + (K*y);
     long x_size = x_.size();
-    MatrixXd I = MatrixXd::Identity(x_size, x_size);
-    P_ = (I - K*H_)*P_;    
+    P_ = (MatrixXd::Identity(x_size, x_size) - K*H_)*P_;
 
 }
