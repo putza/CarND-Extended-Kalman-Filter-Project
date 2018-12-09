@@ -40,11 +40,7 @@ FusionEKF::FusionEKF() {
   H_laser_ << 1, 0 ,0 ,0,
               0, 1 , 0, 0;
 
-  float noise_ax = 9.0;
-  float noise_ay = 9.0;
-
   // Initial Transition Matrix
-
   ekf_.F_ = MatrixXd(4, 4); // Initializing the state prediction model
   ekf_.F_ << 1, 0, 1 , 0,
              0, 1, 0, 1,
@@ -52,7 +48,6 @@ FusionEKF::FusionEKF() {
              0, 0, 0, 1;    // 1 needs to be replaced by delta d
 
   // State Covariance Matrix
-
   ekf_.P_ = MatrixXd(4, 4); // Initializing process covariance matrix
   ekf_.P_ << 1, 0, 0, 0,
              0, 1, 0, 0,
@@ -101,13 +96,13 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
         ekf_.x_(1) = rho*sin(phi);
 
         // Try a bad guess for the velocity. Seems to give slightly better results than initializing with 0
-        float rho_dot = measurement_pack.raw_measurements_[2];
-        ekf_.x_(2) = rho_dot*cos(phi);
-        ekf_.x_(3) = rho_dot*sin(phi);
+        //loat rho_dot = measurement_pack.raw_measurements_[2];
+        //ekf_.x_(2) = rho_dot*cos(phi);
+        //ekf_.x_(3) = rho_dot*sin(phi);
 
         // Alternative: Initialize with zero
-        //ekf_.x_(2) = 0;
-        //ekf_.x_(3) = 0;
+        ekf_.x_(2) = 0;
+        ekf_.x_(3) = 0;
 
 
     }
@@ -181,9 +176,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
 
-    Hj_ = tools.CalculateJacobian(ekf_.x_);               // Calculate and store Jacobian
-
-    ekf_.H_ = Hj_;                                        // Assign Jacobian to ekf class
+    ekf_.H_ = tools.CalculateJacobian(ekf_.x_);;          // Assign Jacobian to ekf class
     ekf_.R_ = R_radar_;                                   // Assign R
     ekf_.UpdateEKF(measurement_pack.raw_measurements_);   // Execute EKF update step
 

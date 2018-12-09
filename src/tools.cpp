@@ -14,6 +14,7 @@ VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
   /**
   TODO: (completed)
     * (done) Calculate the RMSE here.
+    * (TODO) Unit test
     * Followed LEsson 25.24
   */
 
@@ -44,8 +45,9 @@ VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
 
 MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
   /**
-  TODO: (completed)
+  TODO: (completed for assignment)
     * (done) Calculate a Jacobian here.
+    * (TODO) Unit test
     * Followed section 25.25ff
   */
 
