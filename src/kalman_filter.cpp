@@ -45,8 +45,7 @@ void KalmanFilter::Update(const VectorXd &z) {
     MatrixXd K = PHt * Si;
 
     x_ = x_ + (K * y);                // Update state with projected residual
-    long x_size = x_.size();          // Update process coavriance matrix
-    P_ = (MatrixXd::Identity(x_size, x_size) - K * H_) * P_;
+    P_ = (MatrixXd::Identity(x_.size(), x_.size()) - K * H_) * P_; // Update process coavriance matrix
 
 }
 
@@ -65,13 +64,8 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
     float rho = sqrt(px*px + py*py);
     float phi = atan2(py, px);
     float rho_dot = (px*vx + py*vy)/rho;
-    // Ignore radial velocity is radius is too small
-    // (Optional, does not make a difference in the result for this dataset)
-    if (fabs(rho) < 0.0001) {
-      rho_dot = 0;
-    }
 
-    // Calculate the exatc projection from state to measurement space: z_p =  h(x_p)
+    // Calculate the exact projection from state to measurement space: z_p =  h(x_p)
     VectorXd z_p(3);
     z_p << rho, phi, rho_dot;
 
@@ -95,7 +89,6 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
 
     // Project measurment space to state space
     x_ = x_ + (K*y);
-    long x_size = x_.size();
-    P_ = (MatrixXd::Identity(x_size, x_size) - K*H_)*P_;
+    P_ = (MatrixXd::Identity(x_.size(), x_.size()) - K*H_)*P_;
 
 }

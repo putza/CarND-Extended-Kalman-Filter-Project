@@ -75,10 +75,10 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       * (done) Create the covariance matrix.
       * (done) Remember: you'll need to convert radar from polar to cartesian coordinates.
     */
+
     // first measurement
-    cout << "EKF: " << endl;
     ekf_.x_ = VectorXd(4);
-    ekf_.x_ << 0.001, 0.001, 0.001, 0.001;
+    ekf_.x_ << 1.0, 1.0, 1.0, 1.0;
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       /**
@@ -120,7 +120,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
     previous_timestamp_ = measurement_pack.timestamp_; // Initialize timestamp with first measurement time.
 
-    // done initializing, no need to predict or update
+    // done initializing, no update or predict step
     is_initialized_ = true;
     return;
   }
