@@ -20,7 +20,7 @@ FusionEKF::FusionEKF() {
   R_laser_ = MatrixXd(2, 2);
   R_radar_ = MatrixXd(3, 3);
   H_laser_ = MatrixXd(2, 4);
-  Hj_ = MatrixXd(3, 4);
+  Hj_      = MatrixXd(3, 4);
 
   //measurement covariance matrix - laser
   R_laser_ << 0.0225, 0,
@@ -44,15 +44,15 @@ FusionEKF::FusionEKF() {
   ekf_.F_ = MatrixXd(4, 4); // Initializing the state prediction model
   ekf_.F_ << 1, 0, 1 , 0,
              0, 1, 0, 1,
-             0, 0, 1, 0,    // 1 needs to be replaced by delta d
-             0, 0, 0, 1;    // 1 needs to be replaced by delta d
+             0, 0, 1, 0,    // 1 needs to be replaced by delta t
+             0, 0, 0, 1;    // 1 needs to be replaced by delta t
 
   // State Covariance Matrix
   ekf_.P_ = MatrixXd(4, 4); // Initializing process covariance matrix
   ekf_.P_ << 1, 0, 0, 0,
              0, 1, 0, 0,
-             0, 0, 1000, 0, // High penalty for initial velocity prediction vx
-             0, 0, 0, 1000; // High penalty for initial velocity prediction vy
+             0, 0, 1000, 0, // High penalty for initial velocity prediction vx, Udacity Quiz
+             0, 0, 0, 1000; // High penalty for initial velocity prediction vy, Udacity Quiz
 
   //Tools tools; Initialized in header
 }
@@ -96,11 +96,12 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
         ekf_.x_(1) = rho*sin(phi);
 
         // Try a bad guess for the velocity. Seems to give slightly better results than initializing with 0
-        //loat rho_dot = measurement_pack.raw_measurements_[2];
+        // Not really working any better than the zero initialization
+        // float rho_dot = measurement_pack.raw_measurements_[2];
         //ekf_.x_(2) = rho_dot*cos(phi);
         //ekf_.x_(3) = rho_dot*sin(phi);
 
-        // Alternative: Initialize with zero
+        // Alternative: Initialize with zero, works just as well.
         ekf_.x_(2) = 0;
         ekf_.x_(3) = 0;
 
@@ -156,7 +157,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   float noise_ay = 9.0;
 
 
-  ekf_.Q_ <<  dt_4*noise_ax, 0, dt_3*noise_ax, 0,
+  ekf_.Q_ << dt_4*noise_ax, 0, dt_3*noise_ax, 0,
              0, dt_4*noise_ay, 0, dt_3*noise_ay,
              dt_3*noise_ax, 0, dt_2*noise_ax, 0,
              0, dt_3*noise_ay, 0, dt_2*noise_ay;
@@ -175,14 +176,14 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
 
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
-
+    // Rader Updates, identikal to Laser, exepdt use updated Jacobian + EKF
     ekf_.H_ = tools.CalculateJacobian(ekf_.x_);;          // Assign Jacobian to ekf class
     ekf_.R_ = R_radar_;                                   // Assign R
     ekf_.UpdateEKF(measurement_pack.raw_measurements_);   // Execute EKF update step
 
 
   } else {
-    // Laser updates
+    // Laser updates, follow Udacity Quiz
     ekf_.H_ = H_laser_;                                   // Assign state->measurement projection matrix
     ekf_.R_ = R_laser_;                                   // Assign R
     ekf_.Update(measurement_pack.raw_measurements_);      // Execute classical Kalman update step

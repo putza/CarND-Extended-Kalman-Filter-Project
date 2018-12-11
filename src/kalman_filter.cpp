@@ -26,7 +26,6 @@ void KalmanFilter::Predict() {
   */
 
     x_ = F_*x_; // New state prediction based on motion model
-    //MatrixXd Ft = F_.transpose();
     P_ = F_*P_*F_.transpose() + Q_; // New process covariance prediction  based on motion model
 }
 
@@ -62,10 +61,12 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
     float vx = x_[2];
     float vy = x_[3];
 
+    // Temporary storage for measurement prediction bases on x_
     float rho = sqrt(px*px + py*py);
     float phi = atan2(py, px);
     float rho_dot = (px*vx + py*vy)/rho;
     // Ignore radial velocity is radius is too small
+    // (Optional, does not make a difference in the result for this dataset)
     if (fabs(rho) < 0.0001) {
       rho_dot = 0;
     }
